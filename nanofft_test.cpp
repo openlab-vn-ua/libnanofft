@@ -1,9 +1,12 @@
 #include "nanofft_test.h"
 #include "nanofft.h"
 
+#include <string.h>
+#include <math.h>
+
 #if !defined(logRawPrintln)
 #include <iostream>
-#define logRawPrintln(x) std::cout << x << "\n";
+#define logRawPrintln(x) std::cout << (x) << "\n";
 #define logRawPrintF(fmt,...) printf(fmt, __VA_ARGS__)
 #else
 #endif
@@ -22,6 +25,8 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
     #define logPFX "testNanoFFTStep:"
 
     bool isOk = true;
+
+    bool isLogVerbose = false;
 
     if (directFFTCount <= 0) { return false; } // invalid params
     //static constexpr int COUNT = 16; // number of samples
@@ -51,10 +56,13 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
         srcI[i] = 0.0;
     }
 
-    if (isLog) { logRawPrintF(logPFX "Source[%d]:\n", (int)COUNT); }
-    for (i = 0; i < COUNT; i++)
+    if (isLog && isLogVerbose)
     {
-        if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", srcR[i], srcI[i], srcR[i] * srcR[i] + srcI[i] * srcI[i]); }
+        if (isLog) { logRawPrintF(logPFX "Source[%d]:\n", (int)COUNT); }
+        for (i = 0; i < COUNT; i++)
+        {
+            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", srcR[i], srcI[i], srcR[i] * srcR[i] + srcI[i] * srcI[i]); }
+        }
     }
 
     // Spectral
@@ -68,12 +76,14 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
         NanoFFT::FFT(fftR, fftI, COUNT, true); // Do direct FFT
     }
 
-    // Output real and imaginary parts of the FFT and spectral power
-    if (isLog) { logRawPrintF(logPFX "FFT[%d]:\n", (int)COUNT); }
-
-    for (i = 0; i < COUNT; i++)
+    if (isLog && isLogVerbose)
     {
-        if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", fftR[i], fftI[i], fftR[i] * fftR[i] + fftI[i] * fftI[i]); }
+        // Output real and imaginary parts of the FFT and spectral power
+        if (isLog) { logRawPrintF(logPFX "FFT[%d]:\n", (int)COUNT); }
+        for (i = 0; i < COUNT; i++)
+        {
+            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", fftR[i], fftI[i], fftR[i] * fftR[i] + fftI[i] * fftI[i]); }
+        }
     }
 
     if (!areFloatEqual(fftR[0],  0.5 * amp0 * COUNT, EPS)) { isOk = false; }
@@ -116,10 +126,13 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
             NanoFFT::FFT(outR, outI, COUNT, false); // Do inverse FFT
         }
 
-        if (isLog) { logRawPrintF(logPFX "Inverse[%d]:\n", (int)COUNT); }
-        for (i = 0; i < COUNT; i++)
+        if (isLog && isLogVerbose)
         {
-            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f |-| %10.6f  %10.6f\n", outR[i], outI[i], outR[i] * outR[i] + outI[i] * outI[i], outR[i]-srcR[i], outI[i] - srcI[i]); }
+            if (isLog) { logRawPrintF(logPFX "Inverse[%d]:\n", (int)COUNT); }
+            for (i = 0; i < COUNT; i++)
+            {
+                if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f |-| %10.6f  %10.6f\n", outR[i], outI[i], outR[i] * outR[i] + outI[i] * outI[i], outR[i]-srcR[i], outI[i] - srcI[i]); }
+            }
         }
 
         for (i = 0; i < COUNT; i++)
@@ -131,14 +144,7 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
 
     if (isLog)
     {
-        if (isOk)
-        {
-            printf(logPFX "OK\n");
-        }
-        else
-        {
-            printf(logPFX "FAIL\n");
-        }
+        logRawPrintF(logPFX "[%d]:%s" "\n", (int)COUNT, (isOk ? "OK" : "FAIL"));
     }
 
     #undef logPFX
