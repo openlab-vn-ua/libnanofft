@@ -2,6 +2,8 @@
 #ifndef NANOFFT_H
 #define NANOFFT_H
 
+#include <stdlib.h>
+
 // Fast Fourier transform proccessor
 // --------------------------------------------------------------------------
 // Proccess Direct and inverce fourier transform operations
