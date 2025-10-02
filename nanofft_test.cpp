@@ -52,7 +52,7 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
         srcR[i] += amp0 * 0.5; // DC part is doubled
         srcR[i] += amp1 * cos(p * i * 1);  // Real part of signal
         srcR[i] += amp2 * sin(p * i * 2);  // Real part of signal double freq (even harmonis will be sin in this test)
-        srcR[i] += amp3 * cos(p * i * 3);  // Real part of signal tripple freq
+        srcR[i] += amp3 * cos(p * i * 3);  // Real part of signal triple freq
         srcI[i] = 0.0;
     }
 
