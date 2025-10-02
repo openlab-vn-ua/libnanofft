@@ -4,15 +4,15 @@
 
 #include <stdlib.h>
 
-// Fast Fourier transform proccessor
+// Fast Fourier transform processor
 // --------------------------------------------------------------------------
-// Proccess Direct and inverce fourier transform operations
+// Process Direct and inverce fourier transform operations
 
-// Code hardly based on free implemenation from Wikibooks:
+// Code hardly based on free implementation from Wikibooks:
 // https://ru.wikibooks.org/wiki/%D0%A0%D0%B5%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D0%B8_%D0%B0%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC%D0%BE%D0%B2/%D0%91%D1%8B%D1%81%D1%82%D1%80%D0%BE%D0%B5_%D0%BF%D1%80%D0%B5%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D0%A4%D1%83%D1%80%D1%8C%D0%B5
-// Ported to C++ without any serious changes of orginal code, may run even on Arduino platform
+// Ported to C++ without any serious changes of original code, may run even on Arduino platform
 // Speed ~15% lower then KISSFFT library in simple float mode
-// The main reason for this code is to have simple lightweight single .h file FFT implementaion
+// The main reason for this code is to have simple lightweight single .h file FFT implementation
 
 class NanoFFT
 {
