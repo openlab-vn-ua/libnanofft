@@ -1,2 +1,2 @@
 # libnanofft
-Super lightweight FFT implemenation on C++
+Super lightweight FFT implementation on C++
