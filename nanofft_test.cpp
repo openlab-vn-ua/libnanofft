@@ -36,7 +36,7 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
     float srcR[COUNT];
     float srcI[COUNT];
 
-    // Input: DC + signal + 2nd harmonic(phase shifted+90deg[cos2sin]) + 3rd harmonic
+    // Input: DC + signal + 2nd harmonic (phase shifted +90deg [cos2sin]) + 3rd harmonic
 
     float amp = 1.0;
     float bp = 2 * 3.141592653589 / COUNT; // There will be COUNT samples per period of base freq period
@@ -54,7 +54,7 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
 
         srcR[i] += amp0 * 0.5; // DC part is doubled
         srcR[i] += amp1 * cos(p * i * 1);  // Real part of signal
-        srcR[i] += amp2 * sin(p * i * 2);  // Real part of signal double freq (even harmonis will be sin in this test)
+        srcR[i] += amp2 * sin(p * i * 2);  // Real part of signal double freq (even harmonics will be sin in this test)
         srcR[i] += amp3 * cos(p * i * 3);  // Real part of signal triple freq
         srcI[i] = 0.0;
     }
@@ -89,7 +89,7 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
         }
     }
 
-    // Output: DC + signal + 2nd harmonic(phase shifted+90deg[cos2sin]) + 3rd harmonic
+    // Output: DC + signal + 2nd harmonic (phase shifted +90deg [cos2sin]) + 3rd harmonic
 
     if (!areFloatEqual(fftR[0],  0.5 * amp0 * COUNT, EPS)) { isOk = false; }
     if (!areFloatEqual(fftI[0],  0.0, EPS))                { isOk = false; }
@@ -160,7 +160,7 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
 template<int COUNT = 16>
 static bool testNanoFFTZeros(bool isLog, int directFFTCount = 1, int inverseFFTCount = 1)
 {
-    #define logPFX "testNanoFFTZeros:" // test case: zeros in = zeroes out
+    #define logPFX "testNanoFFTZeros:" // test case: zeros in = zeros out
 
     bool isOk = true;
 
@@ -174,7 +174,7 @@ static bool testNanoFFTZeros(bool isLog, int directFFTCount = 1, int inverseFFTC
     float srcR[COUNT];
     float srcI[COUNT];
 
-    // Input: all zeroes in
+    // Input: All zeroes in
 
     int i;
     for (i = 0; i < COUNT; i++)
@@ -263,7 +263,7 @@ static bool testNanoFFTZeros(bool isLog, int directFFTCount = 1, int inverseFFTC
 template<int COUNT = 16>
 static bool testNanoFFTPulse(bool isLog, int pulsePos = 0, int directFFTCount = 1, int inverseFFTCount = 1)
 {
-    #define logPFX "testNanoFFTPulse:" // test case: pulse in = infinity spectre
+    #define logPFX "testNanoFFTPulse:" // test case: pulse in = infinite spectrum
 
     bool isOk = true;
 
@@ -280,7 +280,7 @@ static bool testNanoFFTPulse(bool isLog, int pulsePos = 0, int directFFTCount = 
     float srcR[COUNT];
     float srcI[COUNT];
 
-    // Input: single pulse
+    // Input: Single pulse
 
     int i;
     for (i = 0; i < COUNT; i++)
@@ -321,7 +321,7 @@ static bool testNanoFFTPulse(bool isLog, int pulsePos = 0, int directFFTCount = 
         }
     }
 
-    // Output: Should be all ones (inifinity spectre)
+    // Output: Output: Should be all ones (infinite spectrum)
 
     for (i = 0; i < COUNT; i++)
     {
@@ -339,7 +339,7 @@ static bool testNanoFFTPulse(bool isLog, int pulsePos = 0, int directFFTCount = 
             if (!areFloatEqual(fftR[i], cos(phase), EPS)) { isOk = false; }
             if (!areFloatEqual(fftI[i], sin(phase), EPS)) { isOk = false; }
         }
-        // Invariant: modulo (amplitude) sould be 1.0 everywhere on all harmonics
+        // Invariant: modulus (amplitude) should be 1.0 everywhere on all harmonics
         if (!areFloatEqual(fftR[i] * fftR[i] + fftI[i] * fftI[i], 1.0, EPS)) { isOk = false; }
     }
 
