@@ -21,5 +21,6 @@ jobs:
       - name: Spell check
         uses: codespell-project/actions-codespell@master
         with:
-          only_warn: 1        
-          uri_ignore_words_list: "*"
+          uri_ignore_words_list: "*" # somehow does not detect uri in nanofft.h@34
+          ignore_words_list: stati # found in url nanofft.h@34
+          # only_warn: 1
