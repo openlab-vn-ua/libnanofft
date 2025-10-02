@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: compile
+      run: g++ nanofft_test.cpp -DNANOFFT_TEST_MAIN -o nanofft_test
+    - name: verity
+      run: nanofft_test
