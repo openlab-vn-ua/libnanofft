@@ -35,6 +35,9 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
     // Source
     float srcR[COUNT];
     float srcI[COUNT];
+
+    // Input: DC + signal + 2nd harmonic(phase shifted+90deg[cos2sin]) + 3rd harmonic
+
     float amp = 1.0;
     float bp = 2 * 3.141592653589 / COUNT; // There will be COUNT samples per period of base freq period
     float p = bp; // actual period (mul to increase freq)
@@ -85,6 +88,8 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
             if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", fftR[i], fftI[i], fftR[i] * fftR[i] + fftI[i] * fftI[i]); }
         }
     }
+
+    // Output: DC + signal + 2nd harmonic(phase shifted+90deg[cos2sin]) + 3rd harmonic
 
     if (!areFloatEqual(fftR[0],  0.5 * amp0 * COUNT, EPS)) { isOk = false; }
     if (!areFloatEqual(fftI[0],  0.0, EPS))                { isOk = false; }
@@ -152,6 +157,238 @@ static bool testNanoFFTStep(bool isLog, int directFFTCount = 1, int inverseFFTCo
     return isOk;
 }
 
+template<int COUNT = 16>
+static bool testNanoFFTZeros(bool isLog, int directFFTCount = 1, int inverseFFTCount = 1)
+{
+    #define logPFX "testNanoFFTZeros:" // test case: zeros in = zeroes out
+
+    bool isOk = true;
+
+    bool isLogVerbose = false;
+
+    if (directFFTCount <= 0) { return false; } // invalid params
+    //static constexpr int COUNT = 16; // number of samples
+    constexpr float EPS = COUNT <= 256 ? 0.001 : 0.05;
+
+    // Source
+    float srcR[COUNT];
+    float srcI[COUNT];
+
+    // Input: all zeroes in
+
+    int i;
+    for (i = 0; i < COUNT; i++)
+    {
+        srcR[i] = 0.0; // Real part of signal      (cos)
+        srcI[i] = 0.0; // Imaginary part of signal (sin)
+    }
+
+    if (isLog && isLogVerbose)
+    {
+        if (isLog) { logRawPrintF(logPFX "Source[%d]:\n", (int)COUNT); }
+        for (i = 0; i < COUNT; i++)
+        {
+            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", srcR[i], srcI[i], srcR[i] * srcR[i] + srcI[i] * srcI[i]); }
+        }
+    }
+
+    // Spectral
+    float fftR[COUNT];
+    float fftI[COUNT];
+
+    for (i = 0; i < directFFTCount; i++)
+    {
+        memcpy(fftR, srcR, sizeof(fftR));
+        memcpy(fftI, srcI, sizeof(fftI));
+        NanoFFT::FFT(fftR, fftI, COUNT, true); // Do direct FFT
+    }
+
+    if (isLog && isLogVerbose)
+    {
+        // Output real and imaginary parts of the FFT and spectral power
+        if (isLog) { logRawPrintF(logPFX "FFT[%d]:\n", (int)COUNT); }
+        for (i = 0; i < COUNT; i++)
+        {
+            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", fftR[i], fftI[i], fftR[i] * fftR[i] + fftI[i] * fftI[i]); }
+        }
+    }
+
+    // Output: Should be all zeros
+
+    for (i = 0; i < COUNT; i++)
+    {
+        if (!areFloatEqual(fftR[i], 0.0, EPS)) { isOk = false; }
+        if (!areFloatEqual(fftI[i], 0.0, EPS)) { isOk = false; }
+    }
+
+    // Restored
+    float outR[COUNT];
+    float outI[COUNT];
+
+    if (inverseFFTCount > 0)
+    {
+        for (i = 0; i < inverseFFTCount; i++)
+        {
+            memcpy(outR, fftR, sizeof(outR));
+            memcpy(outI, fftI, sizeof(outI));
+            NanoFFT::FFT(outR, outI, COUNT, false); // Do inverse FFT
+        }
+
+        if (isLog && isLogVerbose)
+        {
+            if (isLog) { logRawPrintF(logPFX "Inverse[%d]:\n", (int)COUNT); }
+            for (i = 0; i < COUNT; i++)
+            {
+                if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f |-| %10.6f  %10.6f\n", outR[i], outI[i], outR[i] * outR[i] + outI[i] * outI[i], outR[i]-srcR[i], outI[i] - srcI[i]); }
+            }
+        }
+
+        for (i = 0; i < COUNT; i++)
+        {
+            if (!areFloatEqual(srcR[i], outR[i], EPS)) { isOk = false; }
+            if (!areFloatEqual(srcI[i], outI[i], EPS)) { isOk = false; }
+        }
+    }
+
+    if (isLog)
+    {
+        logRawPrintF(logPFX "[%d]:%s" "\n", (int)COUNT, (isOk ? "OK" : "FAIL"));
+    }
+
+    #undef logPFX
+
+    return isOk;
+}
+
+template<int COUNT = 16>
+static bool testNanoFFTPulse(bool isLog, int pulsePos = 0, int directFFTCount = 1, int inverseFFTCount = 1)
+{
+    #define logPFX "testNanoFFTPulse:" // test case: pulse in = infinity spectre
+
+    bool isOk = true;
+
+    bool isLogVerbose = false;
+
+    if (directFFTCount <= 0) { return false; } // invalid params
+    if (pulsePos < 0) { return false; }
+    if (pulsePos >= COUNT) { return false; }
+
+    //static constexpr int COUNT = 16; // number of samples
+    constexpr float EPS = COUNT <= 256 ? 0.001 : 0.05;
+
+    // Source
+    float srcR[COUNT];
+    float srcI[COUNT];
+
+    // Input: single pulse
+
+    int i;
+    for (i = 0; i < COUNT; i++)
+    {
+        srcR[i] = 0.0; // Real part of signal      (cos)
+        srcI[i] = 0.0; // Imaginary part of signal (sin)
+
+        if (i == pulsePos) { srcR[i] = 1.0; } // pulse
+    }
+
+    if (isLog && isLogVerbose)
+    {
+        if (isLog) { logRawPrintF(logPFX "Source[%d]:\n", (int)COUNT); }
+        for (i = 0; i < COUNT; i++)
+        {
+            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", srcR[i], srcI[i], srcR[i] * srcR[i] + srcI[i] * srcI[i]); }
+        }
+    }
+
+    // Spectral
+    float fftR[COUNT];
+    float fftI[COUNT];
+
+    for (i = 0; i < directFFTCount; i++)
+    {
+        memcpy(fftR, srcR, sizeof(fftR));
+        memcpy(fftI, srcI, sizeof(fftI));
+        NanoFFT::FFT(fftR, fftI, COUNT, true); // Do direct FFT
+    }
+
+    if (isLog && isLogVerbose)
+    {
+        // Output real and imaginary parts of the FFT and spectral power
+        if (isLog) { logRawPrintF(logPFX "FFT[%d]:\n", (int)COUNT); }
+        for (i = 0; i < COUNT; i++)
+        {
+            if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f\n", fftR[i], fftI[i], fftR[i] * fftR[i] + fftI[i] * fftI[i]); }
+        }
+    }
+
+    // Output: Should be all ones (inifinity spectre)
+
+    for (i = 0; i < COUNT; i++)
+    {
+        if (pulsePos == 0)
+        {
+            // Exact expectation for pulse at 0 pos
+            if (!areFloatEqual(fftR[i], 1.0, EPS)) { isOk = false; }
+            if (!areFloatEqual(fftI[i], 0.0, EPS)) { isOk = false; }
+        }
+        else
+        {
+            // Phase shift for pulse at other pos?
+            // Re = cos(phase), Im = sin(phase)
+            float phase = -2 * 3.141592653589 * i * pulsePos / COUNT;
+            if (!areFloatEqual(fftR[i], cos(phase), EPS)) { isOk = false; }
+            if (!areFloatEqual(fftI[i], sin(phase), EPS)) { isOk = false; }
+        }
+        // Invariant: modulo (amplitude) sould be 1.0 everywhere on all harmonics
+        if (!areFloatEqual(fftR[i] * fftR[i] + fftI[i] * fftI[i], 1.0, EPS)) { isOk = false; }
+    }
+
+    // Restored
+    float outR[COUNT];
+    float outI[COUNT];
+
+    if (inverseFFTCount > 0)
+    {
+        for (i = 0; i < inverseFFTCount; i++)
+        {
+            memcpy(outR, fftR, sizeof(outR));
+            memcpy(outI, fftI, sizeof(outI));
+            NanoFFT::FFT(outR, outI, COUNT, false); // Do inverse FFT
+        }
+
+        if (isLog && isLogVerbose)
+        {
+            if (isLog) { logRawPrintF(logPFX "Inverse[%d]:\n", (int)COUNT); }
+            for (i = 0; i < COUNT; i++)
+            {
+                if (isLog) { logRawPrintF(logPFX "%10.6f  %10.6f  %10.6f |-| %10.6f  %10.6f\n", outR[i], outI[i], outR[i] * outR[i] + outI[i] * outI[i], outR[i]-srcR[i], outI[i] - srcI[i]); }
+            }
+        }
+
+        for (i = 0; i < COUNT; i++)
+        {
+            if (!areFloatEqual(srcR[i], outR[i], EPS)) { isOk = false; }
+            if (!areFloatEqual(srcI[i], outI[i], EPS)) { isOk = false; }
+        }
+    }
+
+    if (isLog)
+    {
+        if (pulsePos == 0)
+        {
+            logRawPrintF(logPFX "[%d]:%s" "\n", (int)COUNT, (isOk ? "OK" : "FAIL"));
+        }
+        else
+        {
+            logRawPrintF(logPFX "[%d,%d]:%s" "\n", (int)COUNT, (int)pulsePos, (isOk ? "OK" : "FAIL"));
+        }
+    }
+
+    #undef logPFX
+
+    return isOk;
+}
+
 bool testNanoFFT256(int directFFTCount)
 {
     return testNanoFFTStep<256>(false, directFFTCount, 0);
@@ -165,11 +402,18 @@ bool testNanoFFT4096(int directFFTCount)
 bool testNanoFFTAll(bool isLog)
 {
     bool isOk = true;
+
+    if (!testNanoFFTZeros<256>(isLog)) { isOk = false; }
+    if (!testNanoFFTPulse<256>(isLog)) { isOk = false; }
+    if (!testNanoFFTPulse<256>(isLog,1)) { isOk = false; }
+    if (!testNanoFFTPulse<256>(isLog,7)) { isOk = false; }
+
     if (!testNanoFFTStep<8>(isLog)) { isOk = false; }
     if (!testNanoFFTStep<16>(isLog)) { isOk = false; }
     if (!testNanoFFTStep<256>(isLog)) { isOk = false; }
   //if (!testNanoFFTStep<4096>(isLog)) { isOk = false; }
-    return isOk;
+
+  return isOk;
 }
 
 #if defined(NANOFFT_TEST_MAIN)
