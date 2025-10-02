@@ -171,3 +171,22 @@ bool testNanoFFTAll(bool isLog)
   //if (!testNanoFFTStep<4096>(isLog)) { isOk = false; }
     return isOk;
 }
+
+#if defined(NANOFFT_TEST_MAIN)
+
+#include <iostream>
+
+int main()
+{
+  const int EXIT_OK = 0;
+  const int EXIT_FAIL = 1;
+
+  if (!testNanoFFTAll(true))
+  {
+    return EXIT_FAIL;
+  }
+
+  return EXIT_OK;
+}
+
+#endif
