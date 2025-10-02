@@ -16,4 +16,4 @@ jobs:
     - name: compile
       run: g++ nanofft_test.cpp -DNANOFFT_TEST_MAIN -o nanofft_test
     - name: verity
-      run: nanofft_test
+      run: ./nanofft_test
